@@ -14,16 +14,18 @@ class _DictionaryHomePageState extends State<DictionaryHomePage> {
   TextEditingController _searchController = TextEditingController();
   String _definition = '';
 
-
   Future<void> _fetchDefinition(String word) async {
-    final response = await http.get(Uri.parse('https://api.dicionario-aberto.net/word/$word'));
+    final response = await http.get(
+      Uri.parse('https://api.dicionario-aberto.net/word/$word'),
+    );
+
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       String definition = '';
       for (var item in data) {
         if (item.containsKey('xml')) {
           var xmlData = item['xml'];
-          var xmlDoc = xml.XmlDocument.parse(xmlData);
+          var xmlDoc = xml.XmlDocument.parse(utf8.decode(xmlData.runes.toList())); // Decodifica os bytes da resposta para UTF-8
           var definitions = xmlDoc.findAllElements('def').map((e) => e.text).join('\n');
           definition += definitions + '\n';
         }
@@ -37,6 +39,7 @@ class _DictionaryHomePageState extends State<DictionaryHomePage> {
       });
     }
   }
+
 
 
 

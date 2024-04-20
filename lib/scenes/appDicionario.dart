@@ -13,3 +13,4 @@ class DictionaryApp extends StatelessWidget {
     );
   }
 }
+
