@@ -1,5 +1,4 @@
 import 'dart:html';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -18,6 +17,7 @@ class _DictionaryHomePageState extends State<DictionaryHomePage> {
     final response = await http.get(
       Uri.parse('https://api.dicionario-aberto.net/word/$word'),
     );
+
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -40,43 +40,113 @@ class _DictionaryHomePageState extends State<DictionaryHomePage> {
     }
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Dicionário'),
-      backgroundColor: Color.fromARGB(255, 46, 58, 44),
-      ),
-      body: Column(
-        children: [
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Digite uma palavra',
-              suffixIcon: IconButton(
-                icon: Icon(Icons.search),
-                onPressed: () {
-                  _fetchDefinition(_searchController.text);
-                },
-              ),
-            ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Dicionário',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Text(
-                  _definition,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18.0),
+          backgroundColor: Color.fromARGB(255, 46, 58, 44),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: 'Definição'),
+              Tab(text: 'Sinônimos'),
+            ],
+          ),
+        ),
+        backgroundColor: Colors.grey[200], // Definindo a cor de fundo como cinza claro
+        body: TabBarView(
+          children: [
+            _buildDefinitionTab(),
+            _buildSynonymsTab(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDefinitionTab() {
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.all(30.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 3,
+                  blurRadius: 7,
+                  offset: Offset(0, 3), // changes position of shadow
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Digite uma palavra',
+                  border: InputBorder.none, // Removendo a borda padrão
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.search),
+                    onPressed: () {
+                      _fetchDefinition(_searchController.text);
+                    },
+                  ),
                 ),
               ),
             ),
           ),
-        ],
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(30.0),
+              child: _definition.isEmpty
+                  ? Container() // Mostra um Container vazio se a definição estiver vazia
+                  : Container(
+                      padding: EdgeInsets.all(25.0), // Adicionando espaçamento interno
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 3,
+                            blurRadius: 7,
+                            offset: Offset(0, 3), //muda a posição da sombra
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        _definition,
+                        textAlign: TextAlign.justify,
+                        style: TextStyle(
+                          fontSize: 18.0,
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSynonymsTab() {
+    return Center(
+      child: Text(
+        'Aqui serão exibidos os sinônimos da palavra pesquisada',
+        style: TextStyle(fontSize: 20.0),
       ),
     );
   }
