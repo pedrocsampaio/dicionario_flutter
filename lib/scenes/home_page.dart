@@ -1,4 +1,3 @@
-import 'dart:html';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -12,12 +11,12 @@ class DictionaryHomePage extends StatefulWidget {
 class _DictionaryHomePageState extends State<DictionaryHomePage> {
   TextEditingController _searchController = TextEditingController();
   String _definition = '';
+  List<String> _searchHistory = [];
 
   Future<void> _fetchDefinition(String word) async {
     final response = await http.get(
       Uri.parse('https://api.dicionario-aberto.net/word/$word'),
     );
-
 
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
@@ -32,6 +31,7 @@ class _DictionaryHomePageState extends State<DictionaryHomePage> {
       }
       setState(() {
         _definition = definition;
+        _searchHistory.add(word); // Adiciona a palavra ao histórico
       });
     } else {
       setState(() {
@@ -44,6 +44,7 @@ class _DictionaryHomePageState extends State<DictionaryHomePage> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
+      initialIndex: 0, // Definição aparece primeiro
       child: Scaffold(
         appBar: AppBar(
           title: Text(
@@ -54,7 +55,7 @@ class _DictionaryHomePageState extends State<DictionaryHomePage> {
           bottom: TabBar(
             tabs: [
               Tab(text: 'Definição'),
-              Tab(text: 'Sinônimos'),
+              Tab(text: 'Histórico'),
             ],
           ),
         ),
@@ -62,8 +63,53 @@ class _DictionaryHomePageState extends State<DictionaryHomePage> {
         body: TabBarView(
           children: [
             _buildDefinitionTab(),
-            _buildSynonymsTab(),
+            _buildHistoryTab(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryTab() {
+    return Padding(
+      padding: EdgeInsets.all(30.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.5),
+              spreadRadius: 3,
+              blurRadius: 7,
+              offset: Offset(0, 3), // changes position of shadow
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(30.0), // Adiciona padding interno
+          child: ListView.builder(
+            itemCount: _searchHistory.length,
+            itemBuilder: (context, index) {
+              return Column(
+                children: [
+                  ListTile(
+                    title: Text(_searchHistory[index]),
+                    onTap: () {
+                      _searchController.clear(); // Limpa o campo de pesquisa
+                      _fetchDefinition(_searchHistory[index]);
+                      DefaultTabController.of(context).animateTo(0); // Redireciona para a aba de definição
+                    },
+                  ),
+                  Divider(
+                    color: Colors.grey[300], // Adiciona uma linha cinza abaixo de cada item da lista
+                    thickness: 1,
+                    height: 1,
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -105,6 +151,7 @@ class _DictionaryHomePageState extends State<DictionaryHomePage> {
             ),
           ),
         ),
+
         Expanded(
           child: SingleChildScrollView(
             child: Padding(
@@ -125,29 +172,36 @@ class _DictionaryHomePageState extends State<DictionaryHomePage> {
                           ),
                         ],
                       ),
-                      child: Text(
-                        _definition,
-                        textAlign: TextAlign.justify,
-                        style: TextStyle(
-                          fontSize: 18.0,
-                          color: const Color.fromARGB(255, 255, 255, 255),
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: _definition
+                            .split('\n')
+                            .map((definition) => Column(
+                                  children: [
+                                    Text(
+                                      definition,
+                                      textAlign: TextAlign.justify,
+                                      style: TextStyle(
+                                        fontSize: 18.0,
+                                        color: Color.fromARGB(255, 0, 0, 0),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 5.0),
+                                    Container(
+                                      height: 1,
+                                      color: Colors.grey[300], // Linha cinza fina
+                                    ),
+                                    SizedBox(height: 10.0),
+                                  ],
+                                ))
+                            .toList(),
                       ),
                     ),
             ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSynonymsTab() {
-    return Center(
-      child: Text(
-        'Aqui serão exibidos os sinônimos da palavra pesquisada',
-        style: TextStyle(fontSize: 20.0),
-      ),
     );
   }
 }
