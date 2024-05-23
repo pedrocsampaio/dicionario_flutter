@@ -8,4 +8,3 @@ import 'appDicionario.dart';
 void main() {
   runApp(DictionaryApp());
 }
-
